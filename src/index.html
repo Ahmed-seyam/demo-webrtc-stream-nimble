@@ -99,91 +99,110 @@
           .addEventListener("input", configurationChangeHandler(p));
       });
 
-      document.addEventListener("DOMContentLoaded", async function (event) {
-        var publisher;
-
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        const devices = await navigator.mediaDevices.enumerateDevices();
-
-        var videoSelect = document.getElementById("videoSource");
-
-        for (const deviceInfo of devices) {
-          const option = document.createElement("option");
-          option.value = deviceInfo.deviceId;
-
-          if (deviceInfo.kind === "videoinput") {
-            option.text =
-              deviceInfo.label || `Camera ${videoSelect.length + 1}`;
-            videoSelect.appendChild(option);
-          }
+      const getDevices = async () => {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true });
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          return devices;
+        } catch (err) {
+          console.log(err);
+          return undefined;
         }
+      };
 
-        const option = document.createElement("option");
-        option.value = "screen_capture";
-        option.text = "capture screen";
+      document.addEventListener("DOMContentLoaded", async function (event) {
+        try {
+          var publisher;
 
-        videoSelect.appendChild(option);
+          var videoSelect = document.getElementById("videoSource");
+          const devices = await getDevices();
 
-        document
-          .getElementById("publishBtn")
-          .addEventListener("click", function () {
-            if (publisher) {
-              document.getElementById("publishBtn").value = "Publish";
-              publisher.stop();
-              publisher = null;
-              return;
+          if (devices) {
+            for (const deviceInfo of devices) {
+              const option = document.createElement("option");
+              option.value = deviceInfo.deviceId;
+
+              if (deviceInfo.kind === "videoinput") {
+                option.text =
+                  deviceInfo.label || `Camera ${videoSelect.length + 1}`;
+                videoSelect.appendChild(option);
+              }
             }
-            document.getElementById("publishBtn").value = "Unpublish";
+          }
 
-            var config = {
-              whipUrl: document.getElementById("publishUrl").value,
-              logLevel: "info",
-              videoElement: document.getElementById("localVideo"),
-              videoBandwidth: document.getElementById("bandwidth").value,
-              width: document.getElementById("resolution").value.split("x")[0],
-              height: document.getElementById("resolution").value.split("x")[1],
-              videoRequired: document.getElementById("videoRequired").checked,
-              audioRequired: document.getElementById("audioRequired").checked,
-              videoSelect: document.getElementById("videoSource"),
+          const option = document.createElement("option");
+          option.value = "screen_capture";
+          option.text = "capture screen";
 
-              onPublisherCreated: function (settings) {
-                logItem("Ready to WebRTC publishing");
-              },
-              onConnectionStateChange: function (connectionState) {
-                logItem("Connection state change", connectionState);
-              },
-              onIceconnectionStateChange: function (connectionIceState) {
-                logItem("Connection ice state change", connectionIceState);
-              },
-              onOffer: function (offer) {
-                logItem("SDP offer", offer);
-              },
-              onAnswer: function (answer) {
-                logItem("SDP answer", answer);
-              },
-              onConnectionError: function () {
-                logItem("Connection error");
-              },
-            };
+          videoSelect.appendChild(option);
 
-            document.getElementById("resolution").disabled = true;
-            document.getElementById("bandwidth").disabled = true;
+          document
+            .getElementById("publishBtn")
+            .addEventListener("click", function () {
+              if (publisher) {
+                document.getElementById("publishBtn").value = "Publish";
+                publisher.stop();
+                publisher = null;
+                return;
+              }
+              document.getElementById("publishBtn").value = "Unpublish";
 
-            publisher = new WebRTCjs(config);
-            publisher.publish();
+              var config = {
+                whipUrl: document.getElementById("publishUrl").value,
+                logLevel: "info",
+                videoElement: document.getElementById("localVideo"),
+                videoBandwidth: document.getElementById("bandwidth").value,
+                width: document
+                  .getElementById("resolution")
+                  .value.split("x")[0],
+                height: document
+                  .getElementById("resolution")
+                  .value.split("x")[1],
+                videoRequired: document.getElementById("videoRequired").checked,
+                audioRequired: document.getElementById("audioRequired").checked,
+                videoSelect: document.getElementById("videoSource"),
 
-            window.addEventListener(
-              "beforeunload",
-              function () {
-                if (publisher) {
-                  publisher.stop();
-                  publisher = null;
-                }
-                return false;
-              },
-              false
-            );
-          });
+                onPublisherCreated: function (settings) {
+                  logItem("Ready to WebRTC publishing");
+                },
+                onConnectionStateChange: function (connectionState) {
+                  logItem("Connection state change", connectionState);
+                },
+                onIceconnectionStateChange: function (connectionIceState) {
+                  logItem("Connection ice state change", connectionIceState);
+                },
+                onOffer: function (offer) {
+                  logItem("SDP offer", offer);
+                },
+                onAnswer: function (answer) {
+                  logItem("SDP answer", answer);
+                },
+                onConnectionError: function () {
+                  logItem("Connection error");
+                },
+              };
+
+              document.getElementById("resolution").disabled = true;
+              document.getElementById("bandwidth").disabled = true;
+
+              publisher = new WebRTCjs(config);
+              publisher.publish();
+
+              window.addEventListener(
+                "beforeunload",
+                function () {
+                  if (publisher) {
+                    publisher.stop();
+                    publisher = null;
+                  }
+                  return false;
+                },
+                false
+              );
+            });
+        } catch (err) {
+          console.log(err);
+        }
       });
     </script>
   </body>
