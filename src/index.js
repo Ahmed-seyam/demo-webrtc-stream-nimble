@@ -177,6 +177,8 @@ export default class WebRTCjs {
   }
 
   async stop() {
+    if (this.stream) this.stream.getTracks().forEach((track) => track.stop());
+
     if (!this.pc) {
       // Already stopped
       return;
