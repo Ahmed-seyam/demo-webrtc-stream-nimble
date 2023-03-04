@@ -2,45 +2,55 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
     <title><%= htmlWebpackPlugin.options.title %></title>
   </head>
   <body>
-    <h3> URL </h3>
+    <h3>URL</h3>
     <div id="publishUrlWrp">
-      <input id="publishUrl" value="https://127.0.0.1:8443/live/whip?whipauth=username:password">
-      <input type="button" id="publishBtn" value="Publish">
+      <input
+        id="publishUrl"
+        value="https://127.0.0.1:8443/live/whip?whipauth=username:password"
+      />
+      <input type="button" id="publishBtn" value="Publish" />
     </div>
-    <h3> Video Bandwidth Limit Kb</h3>
+    <h3>Video Bandwidth Limit Kb</h3>
     <div id="bandwidthWrp">
-      <input id="bandwidth" value="2000">
-        kbps
+      <input id="bandwidth" value="2000" />
+      kbps
     </div>
-    <h3> Video Resolution</h3>
+    <h3>Video Resolution</h3>
     <div id="resolutionWrp">
-        <select id="resolution">
-            <option value="1920x1080">1920x1080</option>
-            <option value="1280x720" selected>1280x720</option>
-            <option value="640x480">640x480</option>
-            <option value="320x240">320x240</option>
-        </select>
-        <input type="checkbox" id="natural" checked onclick="onSwapRotation()">
-        <label for="natural">Natural Video</label>
-        <input type="checkbox" id="videoRequired" checked>
-        <label for="videoRequired">Stream Video</label>
-        <input type="checkbox" id="audioRequired" checked>
-        <label for="audioRequired">Stream Audio</label>
+      <select id="resolution">
+        <option value="1920x1080">1920x1080</option>
+        <option value="1280x720" selected>1280x720</option>
+        <option value="640x480">640x480</option>
+        <option value="320x240">320x240</option>
+      </select>
+      <input type="checkbox" id="natural" checked onclick="onSwapRotation()" />
+      <label for="natural">Natural Video</label>
+      <input type="checkbox" id="videoRequired" checked />
+      <label for="videoRequired">Stream Video</label>
+      <input type="checkbox" id="audioRequired" checked />
+      <label for="audioRequired">Stream Audio</label>
     </div>
-    <h3> Source </h3>
+    <h3>Source</h3>
     <div>
       <label for="videoSource">Video: </label>
       <select id="videoSource"></select>
     </div>
-    <h3> Local Video </h3>
+    <h3>Local Video</h3>
     <div id="localVideoWrp">
-      <video id="localVideo" class="rotatedVideo" autoplay muted playsinline></video> <br />
+      <video
+        id="localVideo"
+        class="rotatedVideo"
+        autoplay
+        muted
+        playsinline
+      ></video>
+      <br />
     </div>
-    <h3> Logs </h3>
+    <h3>Logs</h3>
     <div id="logs"></div>
     <script type="text/javascript">
       function onSwapRotation() {
@@ -49,102 +59,131 @@
         var localVideo = document.getElementById("localVideo");
 
         // If the checkbox is checked, display the output text
-        if (checkBox.checked == true){
+        if (checkBox.checked == true) {
           localVideo.classList.add("rotatedVideo");
         } else {
           localVideo.classList.remove("rotatedVideo");
         }
       }
 
-      var logItem = function(title,msg) {
+      var logItem = function (title, msg) {
         var logs = document.getElementById("logs");
         var p = document.createElement("p");
-        var innerHTML = '<b>' + title + '</b>';
-        if (msg) { innerHTML = innerHTML + '<br>' + msg.replace(/\n/g, '<br>')}
+        var innerHTML = "<b>" + title + "</b>";
+        if (msg) {
+          innerHTML = innerHTML + "<br>" + msg.replace(/\n/g, "<br>");
+        }
         p.innerHTML = innerHTML;
 
         logs.appendChild(p);
         logs.scrollTop = logs.scrollHeight;
-      }
+      };
 
-      const configurationChangeHandler = function(url_param) {
+      const configurationChangeHandler = function (url_param) {
         return (e) => {
-          urlParams.set(url_param, e.target.value)
-          history.pushState({},'','?'+urlParams.toString());
-        }
-      }
+          urlParams.set(url_param, e.target.value);
+          history.pushState({}, "", "?" + urlParams.toString());
+        };
+      };
 
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
 
-      const persistedParameters = ['publishUrl', 'bandwidth', 'resolution'];
+      const persistedParameters = ["publishUrl", "bandwidth", "resolution"];
 
-      persistedParameters.forEach(function(p){
-        document.getElementById(p).value = (urlParams.get(p) || document.getElementById(p).value);
-        document.getElementById(p).addEventListener('input', configurationChangeHandler(p));
-      })
+      persistedParameters.forEach(function (p) {
+        document.getElementById(p).value =
+          urlParams.get(p) || document.getElementById(p).value;
+        document
+          .getElementById(p)
+          .addEventListener("input", configurationChangeHandler(p));
+      });
 
-      document.addEventListener("DOMContentLoaded", function(event) {
+      document.addEventListener("DOMContentLoaded", async function (event) {
         var publisher;
 
-        navigator.mediaDevices.getUserMedia({video: true})
-        .then(function(stream) {
-          navigator.mediaDevices.enumerateDevices()
-          .then(function(devices) {
-            var videoSelect = document.getElementById('videoSource');
-            for (const deviceInfo of devices) {
-              const option = document.createElement('option');
-              option.value = deviceInfo.deviceId;
-              if (deviceInfo.kind === 'videoinput') {
-                option.text = deviceInfo.label || `Camera ${videoSelect.length + 1}`;
-                videoSelect.appendChild(option);
-              }
-            }
-          })
-        })
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
 
-        document.getElementById("publishBtn").addEventListener("click", function () {
-          if (publisher) {
+        var videoSelect = document.getElementById("videoSource");
+
+        for (const deviceInfo of devices) {
+          const option = document.createElement("option");
+          option.value = deviceInfo.deviceId;
+
+          if (deviceInfo.kind === "videoinput") {
+            option.text =
+              deviceInfo.label || `Camera ${videoSelect.length + 1}`;
+            videoSelect.appendChild(option);
+          }
+        }
+
+        const option = document.createElement("option");
+        option.value = "screen_capture";
+        option.text = "capture screen";
+
+        videoSelect.appendChild(option);
+
+        document
+          .getElementById("publishBtn")
+          .addEventListener("click", function () {
+            if (publisher) {
               document.getElementById("publishBtn").value = "Publish";
               publisher.stop();
               publisher = null;
               return;
-          }
-          document.getElementById("publishBtn").value = "Unpublish";
-
-          var config = {
-            whipUrl:      document.getElementById("publishUrl").value,
-            logLevel:     'info',
-            videoElement: document.getElementById('localVideo'),
-            videoBandwidth: document.getElementById("bandwidth").value,
-            width: document.getElementById("resolution").value.split('x')[0],
-            height: document.getElementById("resolution").value.split('x')[1],
-            videoRequired: document.getElementById("videoRequired").checked,
-            audioRequired: document.getElementById("audioRequired").checked,
-            videoSelect: document.getElementById('videoSource'),
-
-            onPublisherCreated: function(settings){ logItem('Ready to WebRTC publishing'); },
-            onConnectionStateChange: function(connectionState){ logItem('Connection state change', connectionState); },
-            onIceconnectionStateChange: function(connectionIceState){ logItem('Connection ice state change', connectionIceState); },
-            onOffer: function(offer){ logItem('SDP offer', offer); },
-            onAnswer: function(answer){ logItem('SDP answer', answer); },
-            onConnectionError: function(){ logItem('Connection error'); }
-          };
-
-          document.getElementById("resolution").disabled = true;
-          document.getElementById("bandwidth").disabled = true;
-
-          publisher = new WebRTCjs(config);
-          publisher.publish();
-
-          window.addEventListener("beforeunload", function () {
-            if (publisher) {
-                publisher.stop();
-                publisher = null;
             }
-            return false;
-          }, false);
-        });
+            document.getElementById("publishBtn").value = "Unpublish";
+
+            var config = {
+              whipUrl: document.getElementById("publishUrl").value,
+              logLevel: "info",
+              videoElement: document.getElementById("localVideo"),
+              videoBandwidth: document.getElementById("bandwidth").value,
+              width: document.getElementById("resolution").value.split("x")[0],
+              height: document.getElementById("resolution").value.split("x")[1],
+              videoRequired: document.getElementById("videoRequired").checked,
+              audioRequired: document.getElementById("audioRequired").checked,
+              videoSelect: document.getElementById("videoSource"),
+
+              onPublisherCreated: function (settings) {
+                logItem("Ready to WebRTC publishing");
+              },
+              onConnectionStateChange: function (connectionState) {
+                logItem("Connection state change", connectionState);
+              },
+              onIceconnectionStateChange: function (connectionIceState) {
+                logItem("Connection ice state change", connectionIceState);
+              },
+              onOffer: function (offer) {
+                logItem("SDP offer", offer);
+              },
+              onAnswer: function (answer) {
+                logItem("SDP answer", answer);
+              },
+              onConnectionError: function () {
+                logItem("Connection error");
+              },
+            };
+
+            document.getElementById("resolution").disabled = true;
+            document.getElementById("bandwidth").disabled = true;
+
+            publisher = new WebRTCjs(config);
+            publisher.publish();
+
+            window.addEventListener(
+              "beforeunload",
+              function () {
+                if (publisher) {
+                  publisher.stop();
+                  publisher = null;
+                }
+                return false;
+              },
+              false
+            );
+          });
       });
     </script>
   </body>
